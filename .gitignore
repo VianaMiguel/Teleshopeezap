@@ -1,0 +1,17 @@
+.env
+.venv/
+data/
+__pycache__/
+*.pyc
+
+# cópia de segurança local (~1 GB)
+copiedaqui/
+
+# logs
+*.log
+err.txt
+out.txt
+painel_err.txt
+painel_out.txt
+painel_safe_err.txt
+painel_safe_out.txt

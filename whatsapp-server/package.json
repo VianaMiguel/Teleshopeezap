@@ -1,0 +1,25 @@
+{
+  "name": "whatsapp-server",
+  "version": "1.0.0",
+  "description": "Servidor WhatsApp Web para bot de ofertas",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "list-groups": "node src/scripts/list-groups.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.24.0",
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "qrcode": "^1.5.3",
+    "axios": "^1.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "allowScripts": {
+    "puppeteer@24.38.0": true
+  }
+}

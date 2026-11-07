@@ -1,0 +1,34 @@
+filtros:
+  desconto_minimo: 25
+  palavras_bloqueadas: []
+  preco_maximo: 0
+  preco_minimo: 0
+fontes:
+  amazon:
+    ativa: true
+    buscas: []
+    departamentos: {}
+    paginas: 1
+    requisicoes_por_ciclo: 4
+  facebook:
+    ativa: false
+    buscas: []
+    limite: 20
+  mercadolivre:
+    ativa: true
+    categorias: {}
+    paginas: 1
+  shopee:
+    ativa: true
+    buscas: []
+    limite: 40
+  whatsapp:
+    ativa: true
+    buscas: []
+    limite: 40
+geral:
+  espacamento_segundos: 120
+  horario_ativo: ""
+  intervalo_minutos: 45
+  max_posts_por_ciclo: 3
+  nao_repetir_dias: 7
