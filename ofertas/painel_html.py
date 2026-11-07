@@ -207,7 +207,7 @@ function setId(campo,val){ $("#f_"+campo).value = val; toast("Preenchido — nã
 async function acao(nome){
   const r = await (await fetch("/api/acao",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nome})})).json();
   if(r.erro){ toast(r.erro,true); return; }
-  if(nome==="ml-login") toast("Abrindo o Chrome… faça login e feche o navegador.");
+  if(nome==="ml-login") toast("Abrindo o Chrome… faça login e feche o navegador. (Servidor sem tela? use ssh -X — README, seção 'VPS sem tela')");
   else if(nome==="instalar-navegador") toast("Baixando (~120 MB), acompanhe a saída.");
 }
 

@@ -213,17 +213,36 @@ def _abrir_contexto(pw, headless: bool):
         return pw.chromium.launch_persistent_context(str(PERFIL_DIR), **kwargs)
     except Exception as e:
         msg = str(e)
-        if "ProcessSingleton" in msg or "process already running" in msg.lower() \
-                or "user data directory is already in use" in msg.lower():
+        msg_baixo = msg.lower()
+        if not headless and sys.platform.startswith("linux") and (
+                "missing x server" in msg_baixo or "$display" in msg_baixo
+                or "cannot open display" in msg_baixo):
+            raise RuntimeError(
+                "Sem tela (DISPLAY) para abrir o Chrome do Mercado Livre — instale "
+                "o Xvfb (sudo apt install -y xvfb xauth) e rode por 'bash run.sh' "
+                "(ele cria a tela sozinho) ou conecte via ssh -X. Detalhes: README, "
+                "seção 'VPS sem tela (Oracle etc.)'"
+            ) from e
+        if "ProcessSingleton" in msg or "process already running" in msg_baixo \
+                or "user data directory is already in use" in msg_baixo:
             raise RuntimeError(
                 "O perfil do bot (data/ml_profile) está em uso — feche a janela "
                 "do Chrome aberta pelo ml-login e tente de novo"
             ) from e
-        if "chrome" not in msg.lower():
-            raise
+        if "sandbox" in msg_baixo:
+            # Chrome recusa rodar como root (comum em VPS/Docker) sem isso
+            log.warning("Chrome recusou o sandbox — reabrindo com --no-sandbox")
+            kwargs["args"] = kwargs.get("args", []) + ["--no-sandbox"]
+            try:
+                return pw.chromium.launch_persistent_context(str(PERFIL_DIR), **kwargs)
+            except Exception as e_sandbox:
+                e, msg = e_sandbox, str(e_sandbox)
+                msg_baixo = msg.lower()
+        if "chrome" not in msg_baixo:
+            raise e
         log.warning("Google Chrome não encontrado (%s); usando Chromium do projeto — "
                     "o login no ML pode ser recusado", type(e).__name__)
-        kwargs.pop("channel")
+        kwargs.pop("channel", None)
         return pw.chromium.launch_persistent_context(str(PERFIL_DIR), **kwargs)
 
 
@@ -272,18 +291,50 @@ def _achar_chrome() -> str:
     raise RuntimeError("Google Chrome não encontrado — instale o Google Chrome e tente de novo.")
 
 
+def _garantir_tela_interativa() -> None:
+    """Login manual precisa de uma tela visível — VPS não tem, e Xvfb é invisível."""
+    if not sys.platform.startswith("linux"):
+        return
+    if os.environ.get("ML_LOGIN_VNC") == "1":
+        return  # usuário afirma estar vendo a tela por VNC
+    if not os.environ.get("DISPLAY"):
+        raise RuntimeError(
+            "Sem tela (DISPLAY) neste servidor — o Chrome do login não abriria.\n"
+            "  • recomendado: conecte com X11 forwarding (ssh -X) e rode o ml-login de novo;\n"
+            "  • ou use Xvfb + x11vnc + túnel SSH e rode com ML_LOGIN_VNC=1.\n"
+            "  (passo a passo no README, seção 'VPS sem tela (Oracle etc.)')"
+        )
+    if os.environ.get("OFERTAS_DISPLAY_VIRTUAL") == "1":
+        raise RuntimeError(
+            "O display é virtual (Xvfb) — a janela do Chrome ficaria invisível e o "
+            "login travaria.\n"
+            "Conecte via ssh -X (recomendado) ou via VNC e rode com ML_LOGIN_VNC=1.\n"
+            "(README, seção 'VPS sem tela (Oracle etc.)')"
+        )
+
+
 def ml_login() -> None:
     """Abre um Chrome comum (SEM automação — indetectável porque não há o que
     detectar) no perfil do bot, para você logar no ML uma única vez."""
+    _garantir_tela_interativa()
     chrome = _achar_chrome()
     PERFIL_DIR.mkdir(parents=True, exist_ok=True)
     print("\n➡️  Vai abrir um Chrome normal com o perfil do bot (separado do seu).")
     print("    1. Faça login no Mercado Livre (senha, 2FA etc.)")
     print("    2. Confira que o Linkbuilder carrega logado")
     print("    3. FECHE o navegador para terminar\n")
-    proc = subprocess.Popen([chrome, f"--user-data-dir={PERFIL_DIR}", "--no-first-run",
-                             "--no-default-browser-check", URL_LINKBUILDER])
+    args = [chrome, f"--user-data-dir={PERFIL_DIR}", "--no-first-run",
+            "--no-default-browser-check"]
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        args.append("--no-sandbox")  # Chrome recusa rodar como root sem isso
+    args.append(URL_LINKBUILDER)
+    proc = subprocess.Popen(args)
     proc.wait()
+    if proc.returncode:
+        raise RuntimeError(
+            f"O Chrome fechou com erro (código {proc.returncode}) — se a janela "
+            "não chegou a abrir, confira as mensagens acima e rode de novo"
+        )
     print(f"✅ Perfil salvo em {PERFIL_DIR} — o bot usa essa sessão sozinho daqui pra frente.")
     print('   Teste com: uv run python -m ofertas converter "<link de produto do ML>"')
 

@@ -101,6 +101,8 @@ uv run python -m ofertas ml-login
 ```
 Abre um Chrome normal. Faça login na sua conta de afiliado, confira que o Linkbuilder aparece logado e **feche o navegador**. A sessão fica salva e o bot passa a gerar os links sozinho.
 
+> **Num servidor sem tela (VPS)?** O Chrome precisa de uma tela que **você veja** — veja a seção *VPS sem tela* abaixo (com `ssh -X` resolve em 1 minuto).
+
 ### 7. Conferir e rodar
 ```bash
 uv run python -m ofertas check     # mostra o que ainda falta configurar
@@ -117,7 +119,56 @@ Intervalo entre ciclos, quantos posts por vez, desconto mínimo, horário ativo 
 
 ## Deixar rodando sozinho
 - `bash run.sh` reinicia o bot sozinho se cair. `horario_ativo` no `config.yaml` evita posts de madrugada (padrão 08:00–23:00).
-- Servidor 24/7? Rode dentro de um `tmux`/`screen`, ou crie um serviço `systemd` apontando para `bash run.sh` (com `WorkingDirectory` na pasta do bot).
+- Servidor 24/7? Rode dentro de um `tmux`/`screen`, ou crie um serviço `systemd` apontando para `bash run.sh` (exemplo completo na seção *VPS sem tela*).
+
+---
+
+## 🖥️ VPS sem tela (Oracle, Hetzner etc.)
+
+Servidores normalmente não têm monitor — e o Mercado Livre **exige uma janela de Chrome visível** (o reCAPTCHA recusa Chrome headless). O bot resolve isso sozinho, mas o **login manual** precisa de uma tela que você veja:
+
+- **Coleta e links do ML (automáticos)**: `bash run.sh` e `bash painel.sh` detectam a falta de `DISPLAY` e re-executam sob **Xvfb** (tela virtual, invisível — suficiente para o bot). Instale uma vez:
+  ```bash
+  sudo apt install -y xvfb xauth
+  ```
+  Sem tela e sem Xvfb o bot **não trava**: só a fonte ML falha (com erro no log) e o ciclo continua com as demais fontes.
+- **Login do ML (`ml-login`, uma vez)** — é manual, então escolha:
+  1. **Recomendado — X11 forwarding**: conecte com `ssh -X usuario@servidor` e rode `uv run python -m ofertas ml-login` **nessa sessão**. No Windows, use um cliente com suporte a X11 (PuTTY; ou VcXsrv/Xming aberto junto com o OpenSSH).
+  2. **VNC por túnel SSH** (sem abrir porta na nuvem):
+     ```bash
+     # no servidor
+     sudo apt install -y xvfb x11vnc
+     Xvfb :99 -screen 0 1280x800x24 &
+     x11vnc -display :99 -localhost -forever -nopw &
+     DISPLAY=:99 ML_LOGIN_VNC=1 uv run python -m ofertas ml-login
+
+     # no seu PC: abra o túnel e conecte um visualizador VNC em localhost:5900
+     ssh -L 5900:localhost:5900 usuario@servidor
+     ```
+- **O login vale só naquela máquina**: `data/ml_profile` guarda cookies criptografados pelo sistema — **não copie** a pasta de um PC para o outro; faça o login no próprio VPS.
+- **Painel**: fica em `http://127.0.0.1:8481` (sem senha, por isso nunca é exposto à internet). Para usar de fora:
+  ```bash
+  ssh -L 8481:localhost:8481 usuario@servidor
+  ```
+  e abra `http://localhost:8481` no seu navegador.
+- **WhatsApp**: o QR aparece no terminal; rodando em segundo plano, baixa com `scp usuario@servidor:whatsapp-server/qrcode.png .` e escaneie com o celular.
+- **Serviço `systemd` (24/7)** — os scripts já resolvem o `PATH` do uv (`~/.local/bin`), mas garantam o Xvfb instalado (o `run.sh` o usa sozinho):
+  ```ini
+  [Unit]
+  Description=Bot de ofertas Telegram
+  After=network.target
+
+  [Service]
+  User=usuario
+  WorkingDirectory=/home/usuario/bot-ofertas-telegram
+  ExecStart=/bin/bash run.sh
+  Restart=always
+  RestartSec=15
+
+  [Install]
+  WantedBy=multi-user.target
+  ```
+- **ARM (Oracle Ampere)**: o Google Chrome oficial não tem build para ARM — instale o Chromium (`sudo apt install -y chromium`) e o bot usa ele automaticamente.
 
 ---
 
@@ -127,7 +178,13 @@ Intervalo entre ciclos, quantos posts por vez, desconto mínimo, horário ativo 
 Reabra o terminal ou rode `source $HOME/.local/bin/env`.
 
 **"Google Chrome não encontrado"** (login do Mercado Livre)
-Instale o Google Chrome (ou Chromium) — veja *Pré-requisitos*.
+Instale o Google Chrome (ou Chromium) — veja *Pré-requisitos*. Em VPS ARM (Oracle Ampere) instale só o Chromium.
+
+**`Missing X server or $DISPLAY` / "cannot open display"**
+O servidor não tem tela e o Xvfb não está instalado: `sudo apt install -y xvfb xauth` e rode de novo com `bash run.sh` (ele cria a tela virtual sozinho).
+
+**Login do ML diz "display virtual (Xvfb)"**
+Esse display é invisível — o login manual precisa de `ssh -X` ou VNC. Veja a seção *VPS sem tela*.
 
 **`npm: command not found`**
 Instale o Node.js (https://nodejs.org/) — ele traz o npm junto.

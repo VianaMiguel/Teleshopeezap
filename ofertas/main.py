@@ -119,7 +119,10 @@ def cmd_instalar_navegador(_):
 
 def cmd_ml_login(_):
     from .sources import mercadolivre
-    mercadolivre.ml_login()
+    try:
+        mercadolivre.ml_login()
+    except RuntimeError as e:
+        raise SystemExit(f"❌ {e}")
 
 
 def cmd_testar(args):

@@ -2,7 +2,31 @@
 # Inicia bot + servidor WhatsApp juntos (Linux e macOS).
 # Reinicia o bot se cair. Prefira o painel grafico:  bash painel.sh
 set -e
+# Caminho absoluto deste script (preciso para re-executar sob Xvfb depois do cd)
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 cd "$(dirname "$0")"
+
+# uv instalado pelo instalador oficial fica em ~/.local/bin — cobre systemd/cron
+if [ -d "$HOME/.local/bin" ]; then
+  PATH="$HOME/.local/bin:$PATH"
+  export PATH
+fi
+
+# VPS sem tela: o ML exige Chrome com janela visível (headless é bloqueado).
+# Sem DISPLAY, re-executa sob Xvfb para o bot inteiro ter uma tela virtual.
+if [ "$(uname -s)" = "Linux" ] && [ -z "${DISPLAY:-}" ]; then
+  if command -v xvfb-run >/dev/null 2>&1; then
+    echo "Sem tela (DISPLAY) — reexecutando sob Xvfb (tela virtual) para o Mercado Livre."
+    echo "Login manual do ML exige tela de verdade:  ssh -X usuario@servidor"
+    echo "(README, secao 'VPS sem tela (Oracle etc.)')"
+    export OFERTAS_DISPLAY_VIRTUAL=1
+    exec xvfb-run -a -s "-screen 0 1280x800x24" bash "$SELF" "$@"
+  else
+    echo "AVISO: sem DISPLAY e sem xvfb-run — a fonte Mercado Livre vai falhar."
+    echo "       Instale com:  sudo apt install -y xvfb xauth"
+    echo "       (o resto do bot roda normalmente)"
+  fi
+fi
 
 if ! command -v uv >/dev/null 2>&1; then
   echo "Instale o uv primeiro:  curl -LsSf https://astral.sh/uv/install.sh | sh"
