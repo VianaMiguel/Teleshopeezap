@@ -47,7 +47,10 @@ async function generateQR() {
     logger.info('');
 
     try {
-      execSync(`start "" "${qrPath}"`, { stdio: 'ignore' });
+      const openCmd = process.platform === 'win32' ? `start "" "${qrPath}"`
+        : process.platform === 'darwin' ? `open "${qrPath}"`
+        : `xdg-open "${qrPath}"`;
+      execSync(openCmd, { stdio: 'ignore' });
       logger.info('✅ Janela aberta!');
     } catch (err) {
       logger.warn('⚠️  Não consegui abrir automaticamente.');

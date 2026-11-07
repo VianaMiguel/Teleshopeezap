@@ -1,12 +1,12 @@
 """Painel de controle gráfico (interface web local) para o bot de ofertas.
 
 Roda um servidor só em 127.0.0.1 e abre no navegador. Dali dá para:
-- preencher a configuração (.env) em formulário, sem mexer no Bloco de Notas;
+- preencher a configuração (.env) em formulário, sem editar arquivo à mão;
 - instalar o navegador, fazer login no Mercado Livre e testar as fontes por botões;
 - descobrir os IDs do Telegram automaticamente;
 - ligar/desligar o bot e acompanhar o log ao vivo — tudo sem terminal.
 
-Sobe com:  uv run python -m ofertas painel   (ou dê 2 cliques no PAINEL.bat)
+Sobe com:  uv run python -m ofertas painel   (ou rode:  bash painel.sh)
 """
 import json
 import os
@@ -113,7 +113,7 @@ def garantir_whatsapp_conectado(timeout: int = 90) -> bool:
     """Garante o servidor WhatsApp no ar e conectado até `timeout` segundos.
 
     - se a porta estiver morta, sobe o servidor (com pausa para não duplicar
-      o que o PAINEL.bat já abriu);
+      o que o painel.sh/run.sh já abriu);
     - devolve True se em algum momento ele responder connected:true.
     """
     if not (config.fonte_whatsapp.get("ativa") and ler_env().get("WHATSAPP_CHAT_ID")):

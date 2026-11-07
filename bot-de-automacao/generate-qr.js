@@ -290,9 +290,12 @@ client.on('qr', async (qr) => {
     logger.info('');
     logger.info('='.repeat(70));
 
-    // Abrir no navegador (Windows)
+    // Abrir no navegador (Windows/macOS/Linux)
     const { exec } = require('child_process');
-    exec(`start ${htmlPath}`, (err) => {
+    const openCmd = process.platform === 'win32' ? `start "" "${htmlPath}"`
+      : process.platform === 'darwin' ? `open "${htmlPath}"`
+      : `xdg-open "${htmlPath}"`;
+    exec(openCmd, (err) => {
       if (err) {
         logger.warn('⚠️  Não consegui abrir no navegador automaticamente.');
         logger.warn(`   Abra manualmente: ${htmlPath}`);

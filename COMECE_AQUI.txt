@@ -9,7 +9,7 @@ canal do Telegram com os SEUS links de afiliado.
   JEITO FACIL (recomendado): PAINEL GRAFICO
 ----------------------------------------------------------------
 
-  >>> De 2 cliques no arquivo  PAINEL.bat  <<<
+  >>> Abra o terminal na pasta do bot e rode:  bash painel.sh  <<<
 
 Ele prepara tudo sozinho e abre um painel no seu navegador, onde
 voce:
@@ -19,9 +19,11 @@ voce:
   - liga/desliga o bot e ve tudo funcionando ao vivo.
 
 Na primeira vez ele pode pedir para instalar o "uv" e reabrir o
-PAINEL.bat - so seguir o que aparecer na tela.
+terminal - so seguir o que aparecer na tela.
 
 Antes de comecar voce precisa de:
+  - Google Chrome instalado (para gerar os links do Mercado Livre);
+  - Node.js instalado (para o WhatsApp - https://nodejs.org/);
   - Um bot criado no @BotFather (Telegram) -> guarde o TOKEN.
   - Um canal no Telegram com o seu bot como ADMINISTRADOR.
   - Suas contas de afiliado (Mercado Livre / Amazon / Shopee).
@@ -29,11 +31,10 @@ Antes de comecar voce precisa de:
 O passo a passo completo, com telas, esta no arquivo README.md.
 
 ----------------------------------------------------------------
-  DEU ERRO "Failed to spawn: python"?
+  DEU ERRO "uv: command not found"?
 ----------------------------------------------------------------
-E o Smart App Control do Windows 11. Aperte a tecla Windows,
-digite "Controle inteligente de aplicativos", abra, marque
-DESATIVADO, confirme e reinicie o PC. (Nao desliga o antivirus.)
+Reabra o terminal depois de instalar o uv, ou rode:
+  source $HOME/.local/bin/env
 
 ----------------------------------------------------------------
   IMPORTANTE

@@ -69,14 +69,27 @@ Client.prototype.attachEventListeners = async function (...args) {
 const BROWSER_PATH = findBrowserPath();
 
 function findBrowserPath() {
-  const paths = [
-    path.join(__dirname, '../../node_modules/puppeteer/.local-chromium'),
-    path.join(process.env.LOCALAPPDATA, 'puppeteer'),
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  ];
-  for (const p of paths) {
-    if (fs.existsSync(p)) return p;
+  const paths = [];
+  if (process.env.LOCALAPPDATA) {
+    paths.push(path.join(process.env.LOCALAPPDATA, 'puppeteer'));
   }
+  paths.push(
+    path.join(__dirname, '../../node_modules/puppeteer/.local-chromium'),
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/snap/bin/chromium',
+  );
+  for (const p of paths) {
+    try {
+      // precisa ser um ARQUIVO (executablePath aponta para o binário,
+      // não para uma pasta)
+      if (fs.existsSync(p) && fs.statSync(p).isFile()) return p;
+    } catch (_) {}
+  }
+  // null = puppeteer usa o navegador que ele mesmo baixou (~/.cache/puppeteer)
   return null;
 }
 
@@ -105,6 +118,17 @@ const readyPromise = new Promise((resolve) => {
   readyResolveFn = resolve;
 });
 
+// Abre um arquivo com o aplicativo padrão do sistema (Windows/macOS/Linux).
+function abrirArquivo(p) {
+  try {
+    const { exec } = require('child_process');
+    const cmd = process.platform === 'win32' ? `start "" "${p}"`
+      : process.platform === 'darwin' ? `open "${p}"`
+      : `xdg-open "${p}"`;
+    exec(cmd, () => {});
+  } catch (_) {}
+}
+
 function saveQr(qr) {
   if (!config.displayQR) return;
   logger.info('========================================');
@@ -115,10 +139,7 @@ function saveQr(qr) {
   try {
     const qrPath = path.resolve(__dirname, '../../qrcode.png');
     qrcode.toFile(qrPath, qr, { type: 'png', width: 400, margin: 3 }).catch(() => {});
-    try {
-      const { exec } = require('child_process');
-      exec(`start "" "${qrPath}"`);
-    } catch (_) {}
+    abrirArquivo(qrPath);
   } catch (_) {}
 }
 

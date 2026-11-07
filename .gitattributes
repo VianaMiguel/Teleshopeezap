@@ -1,0 +1,3 @@
+# Mantém os arquivos de script com a quebra de linha certa em qualquer SO
+*.sh text eol=lf
+*.bat text eol=crlf

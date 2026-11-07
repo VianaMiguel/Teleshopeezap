@@ -14,7 +14,7 @@ const logger = require('../utils/logger');
  *
  * - LocalAuth: salva a sessão em .wwebjs_auth/ para não precisar
  *   escanear o QR Code toda vez que reiniciar.
- * - puppeteer.args: flags para rodar headless sem problemas no Windows.
+ * - puppeteer.args: flags para rodar headless sem problemas (Windows/Linux).
  */
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -50,9 +50,12 @@ client.on('qr', async (qr) => {
     logger.info(`→ ${qrPath}`);
     logger.info('==================================================');
 
-    // Abre automaticamente no Windows
+    // Abre automaticamente no aplicativo padrão do sistema
     const { exec } = require('child_process');
-    exec(`start "" "${qrPath}"`);
+    const openCmd = process.platform === 'win32' ? `start "" "${qrPath}"`
+      : process.platform === 'darwin' ? `open "${qrPath}"`
+      : `xdg-open "${qrPath}"`;
+    exec(openCmd, () => {});
   } catch (err) {
     logger.error('Erro ao gerar QR Code PNG:', err.message);
   }

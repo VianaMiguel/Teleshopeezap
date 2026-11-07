@@ -113,7 +113,7 @@ def cmd_instalar_navegador(_):
     from . import config  # noqa: F401 — define PLAYWRIGHT_BROWSERS_PATH (data/pw-browsers)
     r = subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"])
     if r.returncode == 0:
-        print("✅ Chromium instalado em data\\pw-browsers")
+        print("✅ Chromium instalado em data/pw-browsers")
     raise SystemExit(r.returncode)
 
 

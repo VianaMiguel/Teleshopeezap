@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-# Navegador do Playwright fica dentro do projeto: instalações no AppData podem
+# Navegador do Playwright fica dentro do projeto: instalações fora dele podem
 # não ser visíveis entre sessões diferentes (sandbox). Instale com:
 # uv run python -m ofertas instalar-navegador
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(DATA_DIR / "pw-browsers"))
